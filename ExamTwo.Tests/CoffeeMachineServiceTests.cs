@@ -75,4 +75,29 @@ public class CoffeeMachineServiceTests
         Assert.True(outcome.Success);
         Assert.Equal(9, db.Coffees.First(c => c.Name == "Americano").Stock);
     }
+
+    [Fact]
+    public void BuyCoffee_NoStockLeft()
+    {
+        var db = new Database();
+        var service = new CoffeeMachineService(db);
+        var stock = db.Coffees.First(c => c.Name == "Cappuccino").Stock;
+
+        var soldOut = service.BuyCoffee(new OrderRequest
+        {
+            Order = new Dictionary<string, int> { { "Cappuccino", stock } },
+            Payment = new Payment { TotalAmount = 1_000_000 }
+        });
+        Assert.True(soldOut.Success);
+        Assert.Equal(0, db.Coffees.First(c => c.Name == "Cappuccino").Stock);
+
+        var outcome = service.BuyCoffee(new OrderRequest
+        {
+            Order = new Dictionary<string, int> { { "Cappuccino", 1 } },
+            Payment = new Payment { TotalAmount = 1200 }
+        });
+
+        Assert.False(outcome.Success);
+        Assert.Contains("No hay suficientes Cappuccino en la máquina.", outcome.Message);
+    }
 }
