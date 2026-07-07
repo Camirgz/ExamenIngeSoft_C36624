@@ -5,7 +5,7 @@ namespace ExamTwo.Tests;
 public class DatabaseTests
 {
     [Fact]
-    public void InitialCoffeeStock_MatchesUserStory()
+    public void InitialCoffeeStockTest()
     {
         var db = new Database();
 
