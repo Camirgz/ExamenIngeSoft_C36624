@@ -86,7 +86,7 @@ public class CoffeeMachineServiceTests
         var soldOut = service.BuyCoffee(new OrderRequest
         {
             Order = new Dictionary<string, int> { { "Cappuccino", stock } },
-            Payment = new Payment { TotalAmount = 1_000_000 }
+            Payment = new Payment { TotalAmount = stock * 1200 }
         });
         Assert.True(soldOut.Success);
         Assert.Equal(0, db.Coffees.First(c => c.Name == "Cappuccino").Stock);
