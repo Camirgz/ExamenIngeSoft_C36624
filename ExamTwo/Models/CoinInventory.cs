@@ -22,7 +22,7 @@ namespace ExamTwo.Models
             else
             {
                 RollBack(usedCoins);
-                Console.WriteLine("Falló al realizar la compra");
+                Console.WriteLine("Fallo al realizar la compra");
             }
 
             return remaining == 0;
