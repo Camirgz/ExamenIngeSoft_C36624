@@ -1,4 +1,5 @@
 using ExamTwo.Controllers;
+using ExamTwo.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<Database>();
+builder.Services.AddSingleton<CoffeeMachineService>();
 
 var app = builder.Build();
 

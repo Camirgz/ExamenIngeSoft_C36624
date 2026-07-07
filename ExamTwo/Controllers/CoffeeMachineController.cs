@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ExamTwo.Services;
 
 namespace ExamTwo.Controllers
 {
@@ -7,10 +8,38 @@ namespace ExamTwo.Controllers
     {
 
         private readonly Database _db;
+        private readonly CoffeeMachineService _service;
 
-        public CoffeeMachineController(Database db)
+        public CoffeeMachineController(Database db, CoffeeMachineService service)
         {
             _db = db;
+            _service = service;
+        }
+
+        [HttpPost("calculateTotal")]
+        public ActionResult<int> CalculateTotal([FromBody] Dictionary<string, int> order)
+        {
+            try
+            {
+                return Ok(_service.CalculateTotalCost(order));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost("insertMoney")]
+        public ActionResult<int> InsertMoney([FromBody] Payment payment)
+        {
+            try
+            {
+                return Ok(_service.InsertMoney(payment.Coins, payment.Bills));
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("getCoffees")]
@@ -34,52 +63,17 @@ namespace ExamTwo.Controllers
         [HttpPost("buyCoffee")]
         public ActionResult<string> BuyCoffee([FromBody] OrderRequest request)
         {
-            if (request.Order == null || request.Order.Count == 0)
-                return BadRequest("Orden vacía.");
-
-            if (request.Payment.TotalAmount <= 0)
-                return BadRequest("Dinero insuficiente ");
-
             try
             {
-                var totalCost = request.Order.Sum(o => _db.coffeePrice.First(c => c.Key == o.Key).Value * o.Value);
+                var outcome = _service.BuyCoffee(request);
 
-                if (request.Payment.TotalAmount < totalCost)
-                { 
-                    return BadRequest("Dinero insuficiente ");
-                }
+                if (outcome.OutOfService)
+                    return StatusCode(500, outcome.Message);
 
+                if (!outcome.Success)
+                    return BadRequest(outcome.Message);
 
-                foreach (var coffee in request.Order)
-                {
-                    var selected = _db.coffeeStock.First(c => c.Key == coffee.Key).Key;
-                    if (coffee.Value > _db.coffeeStock[selected])
-                    {
-                        return $"No hay suficientes {selected} en la máquina.";
-                    }
-                    _db.coffeeStock[selected] -= coffee.Value;
-                }
-
-                var change = request.Payment.TotalAmount - totalCost;
-                String result = $"Su vuelto es de: {change} colones. Desglose:";
-
-                foreach (var coin in _db.coinInventory.Keys.OrderByDescending(c => c))
-                {
-                    var count = Math.Min(change / coin, _db.coinInventory[coin]);
-                    if (count > 0)
-                    {
-                        result +=  $" {count} moneda de {coin},  ";              
-                        change -= coin * count;
-                    }
-                }
-
-
-                if (change > 0)
-                {
-                    return StatusCode(500, "No hay suficiente cambio en la máquina.");
-                }
-
-                return Ok(result);
+                return Ok(outcome.Message);
             }
             catch (ArgumentException ex)
             {
