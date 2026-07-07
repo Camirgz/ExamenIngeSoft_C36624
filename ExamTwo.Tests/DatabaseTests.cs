@@ -14,4 +14,7 @@ public class DatabaseTests
         Assert.Equal(10, db.coffeeStock["Lates"]);
         Assert.Equal(15, db.coffeeStock["Mocaccino"]);
     }
+
+
+    
 }

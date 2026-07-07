@@ -35,32 +35,32 @@ namespace ExamTwo.Controllers
         public ActionResult<string> BuyCoffee([FromBody] OrderRequest request)
         {
             if (request.Order == null || request.Order.Count == 0)
-                return BadRequest("Ordem vacia.");
+                return BadRequest("Orden vacía.");
 
             if (request.Payment.TotalAmount <= 0)
                 return BadRequest("Dinero insuficiente ");
 
             try
             {
-                var costoTotal = request.Order.Sum(o => _db.coffeePrice.First(c => c.Key == o.Key).Value * o.Value);
+                var totalCost = request.Order.Sum(o => _db.coffeePrice.First(c => c.Key == o.Key).Value * o.Value);
 
-                if (request.Payment.TotalAmount < costoTotal)
+                if (request.Payment.TotalAmount < totalCost)
                 { 
                     return BadRequest("Dinero insuficiente ");
                 }
 
 
-                foreach (var cafe in request.Order)
+                foreach (var coffee in request.Order)
                 {
-                    var selected = _db.coffeeStock.First(c => c.Key == cafe.Key).Key;
-                    if (cafe.Value > _db.coffeeStock[selected])
+                    var selected = _db.coffeeStock.First(c => c.Key == coffee.Key).Key;
+                    if (coffee.Value > _db.coffeeStock[selected])
                     {
                         return $"No hay suficientes {selected} en la máquina.";
                     }
-                    _db.coffeeStock[selected] -= cafe.Value;
+                    _db.coffeeStock[selected] -= coffee.Value;
                 }
 
-                var change = request.Payment.TotalAmount - costoTotal;
+                var change = request.Payment.TotalAmount - totalCost;
                 String result = $"Su vuelto es de: {change} colones. Desglose:";
 
                 foreach (var coin in _db.coinInventory.Keys.OrderByDescending(c => c))
